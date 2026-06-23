@@ -1,7 +1,7 @@
-Instrucciones 
-Paso 1 — Compilar:
+#Instrucciones 
+**Paso 1 — Compilar:**
 g++ -O2 -std=c++17 -o abc_pfsp abc_pfsp.cpp
-Paso 2 — Correrlo con la instancia pequeña y los parámetros por defecto:
+**Paso 2 — Correrlo con la instancia pequeña y los parámetros por defecto:**
 ./abc_pfsp instancia1_bas1.txt
 O indicando los parámetros (lo recomendado para las pruebas del informe):
 ./abc_pfsp instancia1_bas1.txt 20 30 200 42
