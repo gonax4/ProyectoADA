@@ -112,13 +112,13 @@ La tabla siguiente resume las funciones más relevantes del programa, con su pro
 Al finalizar su ejecución, el programa muestra en consola la mejor secuencia de trabajos encontrada, el mejor makespan, el número de iteraciones ejecutadas, el número de reinicios realizados por la fase exploradora, el tiempo de ejecución en segundos y los parámetros utilizados.
 Además, genera cuatro archivos de salida cuyo nombre incorpora el nombre de la instancia procesada:
 
-| Archivo                                       | Descripción                                |
-| --------------------------------------------- | ------------------------------------------ |
-| salida_abc_<instancia>_resumen.txt            | Resumen completo de la ejecución           |
-| salida_abc_<instancia>_tabla_finalizacion.csv | Tabla de tiempos de finalización           |
-| salida_abc_<instancia>_datos_gantt.csv        | Datos para construir el diagrama de Gantt  |
-| salida_abc_<instancia>_convergencia.csv       | Historial del mejor makespan por iteración |
 
+| Archivo | Descripción |
+|----------|------------|
+| `salida_abc_<instancia>_resumen.txt` | Resumen completo de la ejecución con parámetros y resultados. |
+| `salida_abc_<instancia>_tabla_finalizacion.csv` | Tabla de tiempos de finalización de la mejor solución encontrada. |
+| `salida_abc_<instancia>_datos_gantt.csv` | Datos necesarios para construir el diagrama de Gantt. |
+| `salida_abc_<instancia>_convergencia.csv` | Historial del mejor makespan por iteración para la curva de convergencia. |
 ---
 
 
