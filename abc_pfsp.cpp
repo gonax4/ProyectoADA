@@ -696,5 +696,224 @@ int main(int argc, char* argv[]) {
     cout << " - " << archivoConvergencia << " (para la curva de convergencia)" << endl;
     cout << " - " << archivoResumen << endl;
 
+    // ── GRÁFICA: Curva de convergencia (SVG) ──────────────────────────────
+{
+    string archivoSVG = "grafica_convergencia_" + base + ".svg";
+    ofstream svg(archivoSVG);
+
+    const int W = 800, H = 300;
+    const int padL = 70, padR = 30, padT = 40, padB = 50;
+    int iW = W - padL - padR;
+    int iH = H - padT - padB;
+
+    const auto& hist = resultado.historialMejorMakespan;
+    long long minV = *min_element(hist.begin(), hist.end());
+    long long maxV = *max_element(hist.begin(), hist.end());
+    if (maxV == minV) maxV = minV + 1;
+
+    auto toX = [&](int i) {
+        return padL + (double)i / (hist.size() - 1) * iW;
+    };
+    auto toY = [&](long long v) {
+        return padT + (1.0 - (double)(v - minV) / (maxV - minV)) * iH;
+    };
+
+    svg << "<svg xmlns='http://www.w3.org/2000/svg' width='" << W << "' height='" << H << "'>\n";
+    svg << "<rect width='" << W << "' height='" << H << "' fill='#181c27'/>\n";
+
+    // Título
+    svg << "<text x='" << W/2 << "' y='22' text-anchor='middle' "
+        << "font-family='monospace' font-size='13' font-weight='bold' fill='#e8eaf0'>"
+        << "Curva de Convergencia ABC - " << nombreArchivo << "</text>\n";
+
+    // Grid horizontal
+    for (int t = 0; t <= 4; t++) {
+        double y = padT + (double)t / 4 * iH;
+        long long val = maxV - (long long)((double)t / 4 * (maxV - minV));
+        svg << "<line x1='" << padL << "' y1='" << y << "' x2='" << padL+iW
+            << "' y2='" << y << "' stroke='#252b3b' stroke-width='1'/>\n";
+        svg << "<text x='" << padL-6 << "' y='" << y+4
+            << "' text-anchor='end' font-family='monospace' font-size='10' fill='#6b7494'>"
+            << val << "</text>\n";
+    }
+
+    // Grid vertical + labels eje X
+    for (int t = 0; t <= 4; t++) {
+        double x = padL + (double)t / 4 * iW;
+        int iter = (int)((double)t / 4 * (hist.size() - 1)) + 1;
+        svg << "<line x1='" << x << "' y1='" << padT << "' x2='" << x
+            << "' y2='" << padT+iH << "' stroke='#252b3b' stroke-width='1'/>\n";
+        svg << "<text x='" << x << "' y='" << padT+iH+16
+            << "' text-anchor='middle' font-family='monospace' font-size='10' fill='#6b7494'>"
+            << iter << "</text>\n";
+    }
+
+    // Labels ejes
+    svg << "<text x='" << padL + iW/2 << "' y='" << H-6
+        << "' text-anchor='middle' font-family='monospace' font-size='11' fill='#6b7494'>"
+        << "Iteracion</text>\n";
+    svg << "<text x='14' y='" << padT + iH/2
+        << "' text-anchor='middle' font-family='monospace' font-size='11' fill='#6b7494' "
+        << "transform='rotate(-90,14," << padT + iH/2 << ")'>"
+        << "Mejor Makespan</text>\n";
+
+    // Área bajo la curva
+    svg << "<polyline points='";
+    for (int i = 0; i < (int)hist.size(); i++)
+        svg << toX(i) << "," << toY(hist[i]) << " ";
+    svg << toX(hist.size()-1) << "," << padT+iH << " "
+        << padL << "," << padT+iH
+        << "' fill='#f5c84233' stroke='none'/>\n";
+
+    // Línea de convergencia
+    svg << "<polyline fill='none' stroke='#f5c842' stroke-width='2' points='";
+    for (int i = 0; i < (int)hist.size(); i++)
+        svg << toX(i) << "," << toY(hist[i]) << " ";
+    svg << "'/>\n";
+
+    // Punto y valor final
+    double xFin = toX(hist.size()-1);
+    double yFin = toY(hist.back());
+    svg << "<circle cx='" << xFin << "' cy='" << yFin
+        << "' r='4' fill='#f5c842'/>\n";
+    svg << "<text x='" << xFin+8 << "' y='" << yFin+4
+        << "' font-family='monospace' font-size='11' fill='#f5c842'>"
+        << hist.back() << "</text>\n";
+
+    svg << "</svg>\n";
+    svg.close();
+    cout << " - " << archivoSVG << " (curva de convergencia visual)" << endl;
+}
+
+// ── GRÁFICA: Diagrama de Gantt (SVG) ──────────────────────────────────
+{
+    string archivoSVG = "grafica_gantt_" + base + ".svg";
+    ofstream svg(archivoSVG);
+
+    int n = instancia.trabajos;
+    int m = instancia.maquinas;
+    long long makespan = resultado.mejorMakespan;
+
+    const int W     = 900;
+    const int padL  = 60, padR = 30, padT = 60, padB = 40;
+    const int rowH  = 48;
+    int H = padT + m * rowH + padB;
+    int iW = W - padL - padR;
+
+    // Paleta de colores para los trabajos
+    vector<string> paleta = {
+        "#f5c842","#4ecdc4","#ff6b6b","#a78bfa","#34d399",
+        "#fb923c","#60a5fa","#f472b6","#a3e635","#e879f9",
+        "#fbbf24","#2dd4bf","#f87171","#818cf8","#4ade80",
+        "#facc15","#22d3ee","#fb7185","#c084fc","#86efac"
+    };
+
+    svg << "<svg xmlns='http://www.w3.org/2000/svg' width='" << W << "' height='" << H << "'>\n";
+    svg << "<rect width='" << W << "' height='" << H << "' fill='#181c27'/>\n";
+
+    // Título
+    svg << "<text x='" << W/2 << "' y='20' text-anchor='middle' "
+        << "font-family='monospace' font-size='13' font-weight='bold' fill='#e8eaf0'>"
+        << "Diagrama de Gantt - " << nombreArchivo << "</text>\n";
+    svg << "<text x='" << W/2 << "' y='38' text-anchor='middle' "
+        << "font-family='monospace' font-size='11' fill='#aab0c4'>"
+        << "Secuencia: " << ordenAString(resultado.mejorOrden)
+        << "  |  Makespan = " << makespan << "</text>\n";
+
+    // Fondo de filas alternas
+    for (int j = 0; j < m; j++) {
+        int y = padT + j * rowH;
+        string bg = (j % 2 == 0) ? "#181c27" : "#1c2130";
+        svg << "<rect x='" << padL << "' y='" << y << "' width='" << iW
+            << "' height='" << rowH << "' fill='" << bg << "'/>\n";
+    }
+
+    // Grid vertical
+    int paso = max(1LL, makespan / 8);
+    for (long long t = 0; t <= makespan; t += paso) {
+        double x = padL + (double)t / makespan * iW;
+        svg << "<line x1='" << x << "' y1='" << padT << "' x2='" << x
+            << "' y2='" << padT + m*rowH << "' stroke='#252b3b' stroke-width='1'/>\n";
+        svg << "<text x='" << x << "' y='" << padT + m*rowH + 16
+            << "' text-anchor='middle' font-family='monospace' font-size='9' fill='#6b7494'>"
+            << t << "</text>\n";
+    }
+
+    // Labels máquinas
+    for (int j = 0; j < m; j++) {
+        int y = padT + j * rowH + rowH / 2 + 4;
+        svg << "<text x='" << padL - 8 << "' y='" << y
+            << "' text-anchor='end' font-family='monospace' font-size='11' fill='#e8eaf0'>"
+            << "M" << j+1 << "</text>\n";
+    }
+
+    // Barras del Gantt
+    const int barPad = 6;
+    for (int i = 0; i < n; i++) {
+        int trabajo = resultado.mejorOrden[i];
+        string color = paleta[trabajo % paleta.size()];
+
+        for (int j = 0; j < m; j++) {
+            long long fin = tablaFinalizacion[i][j];
+            int dur       = instancia.tiempos[trabajo][j];
+            long long ini = fin - dur;
+
+            double x  = padL + (double)ini / makespan * iW;
+            double bW = (double)dur / makespan * iW;
+            double y  = padT + j * rowH + barPad;
+            double bH = rowH - barPad * 2;
+
+            // Sombra
+            svg << "<rect x='" << x+2 << "' y='" << y+2
+                << "' width='" << bW << "' height='" << bH
+                << "' fill='#000000' opacity='0.4' rx='2'/>\n";
+            // Barra
+            svg << "<rect x='" << x << "' y='" << y
+                << "' width='" << bW << "' height='" << bH
+                << "' fill='" << color << "' rx='2'/>\n";
+            // Etiqueta dentro de la barra
+            if (bW > 20) {
+                svg << "<text x='" << x + bW/2 << "' y='" << y + bH/2 + 4
+                    << "' text-anchor='middle' font-family='monospace' "
+                    << "font-size='9' font-weight='bold' fill='#000000CC'>"
+                    << "J" << trabajo+1 << "</text>\n";
+            }
+        }
+    }
+
+    // Línea de makespan
+    double xEnd = padL + iW;
+    svg << "<line x1='" << xEnd << "' y1='" << padT - 10 << "' x2='" << xEnd
+        << "' y2='" << padT + m*rowH
+        << "' stroke='#f5c842' stroke-width='2' stroke-dasharray='5,3'/>\n";
+    svg << "<text x='" << xEnd - 4 << "' y='" << padT - 14
+        << "' text-anchor='end' font-family='monospace' font-size='10' fill='#f5c842'>"
+        << "Cmax=" << makespan << "</text>\n";
+
+    // Leyenda
+    int legX = padL;
+    int legY = padT + m * rowH + 28;
+    for (int i = 0; i < n && i < 10; i++) {
+        int trabajo = resultado.mejorOrden[i];
+        string color = paleta[trabajo % paleta.size()];
+        svg << "<rect x='" << legX << "' y='" << legY - 10
+            << "' width='12' height='12' fill='" << color << "' rx='2'/>\n";
+        svg << "<text x='" << legX + 16 << "' y='" << legY
+            << "' font-family='monospace' font-size='10' fill='#aab0c4'>"
+            << "J" << trabajo+1 << "</text>\n";
+        legX += 48;
+    }
+
+    // Label eje X
+    svg << "<text x='" << padL + iW/2 << "' y='" << H - 4
+        << "' text-anchor='middle' font-family='monospace' font-size='11' fill='#6b7494'>"
+        << "Tiempo</text>\n";
+
+    svg << "</svg>\n";
+    svg.close();
+    cout << " - " << archivoSVG << " (diagrama de Gantt visual)" << endl;
+}
+
+
     return 0;
 }

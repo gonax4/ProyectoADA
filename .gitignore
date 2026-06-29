@@ -1,3 +1,5 @@
 pfsp
 *.o
 *.exe
+salida_*
+grafica_*
