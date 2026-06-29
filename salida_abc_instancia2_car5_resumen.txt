@@ -1,7 +1,7 @@
 Resumen de ejecucion - Algoritmo ABC para PFSP
-Instancia: instancia1_bas1.txt
-Trabajos: 5
-Maquinas: 4
+Instancia: instancia2_car5.txt
+Trabajos: 10
+Maquinas: 6
 
 Parametros utilizados:
   Numero de abejas (fuentes): 20
@@ -10,8 +10,8 @@ Parametros utilizados:
   Semilla aleatoria: 42
 
 Resultados:
-  Mejor secuencia encontrada: [J2, J4, J5, J3, J1]
-  Mejor makespan: 52
+  Mejor secuencia encontrada: [J6, J2, J4, J1, J3, J8, J10, J9, J7, J5]
+  Mejor makespan: 7738
   Iteraciones ejecutadas: 200
-  Reinicios por fase exploradora: 185
-  Tiempo de ejecucion (segundos): 0.0043394
+  Reinicios por fase exploradora: 91
+  Tiempo de ejecucion (segundos): 0.0046682

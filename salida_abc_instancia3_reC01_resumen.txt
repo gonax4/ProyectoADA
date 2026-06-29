@@ -1,0 +1,17 @@
+Resumen de ejecucion - Algoritmo ABC para PFSP
+Instancia: instancia3_reC01.txt
+Trabajos: 20
+Maquinas: 5
+
+Parametros utilizados:
+  Numero de abejas (fuentes): 20
+  Limite de intentos (abandono): 30
+  Maximo de iteraciones: 200
+  Semilla aleatoria: 42
+
+Resultados:
+  Mejor secuencia encontrada: [J6, J17, J11, J9, J2, J15, J13, J4, J1, J16, J14, J20, J10, J12, J5, J8, J18, J19, J3, J7]
+  Mejor makespan: 1308
+  Iteraciones ejecutadas: 200
+  Reinicios por fase exploradora: 71
+  Tiempo de ejecucion (segundos): 0.0067318

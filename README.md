@@ -1,117 +1,19 @@
-<<<<<<< HEAD
- 
-# Proyecto ADA - PFSP con Artificial Bee Colony - G6
+# Proyecto ADA - PFSP con Artificial Bee Colony (ABC) - G6
+---
+## Descripción del proyecto
 
-Este repositorio contiene la base inicial del proyecto de Análisis y Diseño de Algoritmos para resolver el **Permutation Flow Shop Scheduling Problem (PFSP)** mediante el algoritmo **Artificial Bee Colony (ABC)**.
+Este repositorio contiene la implementación del proyecto de Análisis y Diseño de Algoritmos para resolver el Permutation Flow Shop Scheduling Problem (PFSP) mediante el algoritmo metaheurístico Artificial Bee Colony (ABC).
 
-## Contenido actual
-
-Esta primera versión corresponde a la base del PFSP y cálculo del makespan. El programa permite:
-
-* Leer instancias `.txt`.
-* Identificar la cantidad de trabajos y máquinas.
-* Guardar los tiempos de procesamiento en una matriz.
-* Evaluar un orden de trabajos.
-* Validar que el orden ingresado sea una permutación válida.
-* Calcular la tabla de tiempos de finalización.
-* Obtener el makespan.
-* Generar datos de inicio y fin para elaborar el diagrama de Gantt.
-* Exportar archivos `.csv` y `.txt` con los resultados.
-
+El programa integra la lectura de instancias, cálculo del makespan, generación de soluciones mediante permutaciones de trabajos y la búsqueda de mejores soluciones utilizando las fases de abejas empleadas, observadoras y exploradoras.
+---
 ## Archivos principales
 
-* `main.cpp`: código base del PFSP.
-* `instancia1_bas1.txt`: instancia pequeña de 5 trabajos y 4 máquinas.
-* `instancia2_car5.txt`: instancia mediana de 10 trabajos y 6 máquinas.
-* `instancia3_reC01.txt`: instancia grande de 20 trabajos y 5 máquinas.
-* `readme_instancias.txt`: explicación del formato de las instancias.
-
-## Compilación
-
-Para compilar el programa, ejecutar:
-
-```bash
-g++ main.cpp -o pfsp
-```
-
-## Ejecución con orden natural
-
-Si se ejecuta solo con el archivo de instancia, el programa evalúa el orden natural de trabajos:
-
-```bash
-./pfsp instancia1_bas1.txt
-```
-
-Esto evalúa:
-
-```txt
-[J1, J2, J3, J4, J5]
-```
-
-## Ejecución con orden manual
-
-También se puede ingresar un orden específico de trabajos. Por ejemplo:
-
-```bash
-./pfsp instancia1_bas1.txt 3 1 4 2 5
-```
-
-Esto evalúa la secuencia:
-
-```txt
-[J3, J1, J4, J2, J5]
-```
-
-El programa recibe los trabajos desde 1 para facilitar la lectura, pero internamente usa índices desde 0.
-
-## Archivos generados
-
-Después de ejecutar el programa, se generan archivos como:
-
-```txt
-salida_instancia1_bas1_tabla_finalizacion.csv
-salida_instancia1_bas1_datos_gantt.csv
-salida_instancia1_bas1_resumen.txt
-```
-
-Estos archivos contienen:
-
-* La tabla de tiempos de finalización.
-* Los datos de inicio y fin para el diagrama de Gantt.
-* Un resumen de la instancia evaluada, el orden usado y el makespan obtenido.
-
-## Uso para la integración con ABC
-
-La parte del algoritmo ABC puede reutilizar directamente las siguientes funciones:
-
-```cpp
-leerInstancia()
-validarOrden()
-generarTablaFinalizacion()
-calcularMakespan()
-```
-
-La función más importante para la integración es:
-
-```cpp
-long long makespan = calcularMakespan(instancia, ordenTrabajos);
-```
-
-El algoritmo ABC deberá generar diferentes permutaciones de trabajos y usar esta función para evaluar la calidad de cada solución. Mientras menor sea el makespan, mejor será la solución.
-
-## Nota importante
-
-Los resultados actuales no representan la solución óptima final. Solo validan que el módulo base puede leer las instancias y calcular correctamente el makespan de cualquier secuencia de trabajos. La búsqueda de mejores secuencias será realizada posteriormente mediante el algoritmo Artificial Bee Colony.
-=======
-# Opción 3: Implementación principal e integración en C++
-#### Encargarse de programar el funcionamiento principal del algoritmo ABC en C++.
----
-## Descripción de la implementación
-
-Este proyecto implementa el algoritmo Artificial Bee Colony (ABC) para resolver el problema Permutation Flow Shop Scheduling Problem (PFSP). La implementación incluye la lectura de instancias tipo Taillard, el cálculo eficiente del makespan y la ejecución completa de las fases del algoritmo ABC: abejas empleadas, observadoras y exploradoras.
-
----
-
+- `abc_pfsp.cpp`: implementación principal del algoritmo ABC.
+- `instancia1_bas1.txt`: instancia pequeña.
+- `instancia2_car5.txt`: instancia mediana.
+- `instancia3_reC01.txt`: instancia grande.
+- `readme_instancias.txt`: descripción del formato de entrada.
+Nota: Las instancias utilizadas corresponden a problemas PFSP en formato Taillard y contienen diferentes tamaños para evaluar el comportamiento del algoritmo.
 ## Compilación
 
 Compilar el programa con:
@@ -189,15 +91,13 @@ La función faseObservadoras() implementa la selección por ruleta proporcional 
 ### Fase de abejas exploradoras
 La función faseExploradoras() recorre todas las fuentes y verifica si alguna ha superado el parámetro límite de intentos consecutivos sin mejora. En ese caso, la fuente se considera agotada y se reemplaza por una nueva permutación generada completamente al azar, simulando el comportamiento de una abeja exploradora que abandona una zona improductiva y explora una nueva región del espacio de búsqueda. Se mantiene un contador de reinicios para reportar esta información al finalizar la ejecución.
 ### Actualización de la mejor solución global
-Al final de cada iteración, el ciclo revisa todas las fuentes y actualiza la mejor solución global si alguna ha obtenido un makespan menor al registrado. El mejor orden y el mejor makespan global nunca se sobreescriben por soluciones peores, garantizando que el resultado final sea el óptimo encontrado durante toda la ejecución.
+Al final de cada iteración, el ciclo revisa todas las fuentes y actualiza la mejor solución global si alguna ha obtenido un makespan menor al registrado. El mejor orden y el mejor makespan global nunca se sobreescriben por soluciones peores, garantizando que el resultado final corresponda a la mejor solución encontrada durante la ejecución.
 
 
 ---
 
 ## Funciones principales
 La tabla siguiente resume las funciones más relevantes del programa, con su propósito y la fase del algoritmo a la que pertenecen.
-
-## Funciones principales
 
 | Función | Descripción | Fase ABC |
 |----------|------------|----------|
@@ -214,7 +114,15 @@ La tabla siguiente resume las funciones más relevantes del programa, con su pro
 ---
 
 ## Resultados generados
-Al finalizar su ejecución, el programa muestra en consola la mejor secuencia de trabajos encontrada, el mejor makespan, el número de iteraciones ejecutadas, el número de reinicios realizados por la fase exploradora, el tiempo de ejecución en segundos y los parámetros utilizados.
+Al finalizar su ejecución, el programa muestra:
+
+- Mejor secuencia encontrada.
+- Mejor makespan obtenido.
+- Iteraciones ejecutadas.
+- Reinicios realizados.
+- Tiempo de ejecución.
+- Parámetros utilizados.
+
 Además, genera cuatro archivos de salida cuyo nombre incorpora el nombre de la instancia procesada:
 
 
@@ -225,6 +133,3 @@ Además, genera cuatro archivos de salida cuyo nombre incorpora el nombre de la 
 | `salida_abc_<instancia>_datos_gantt.csv` | Datos necesarios para construir el diagrama de Gantt. |
 | `salida_abc_<instancia>_convergencia.csv` | Historial del mejor makespan por iteración para la curva de convergencia. |
 ---
-
-
->>>>>>> compañero/main
