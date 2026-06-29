@@ -1,6 +1,0 @@
-Resumen de evaluacion PFSP
-Instancia: instancia1_bas1.txt
-Trabajos: 5
-Maquinas: 4
-Orden evaluado: J3 J1 J4 J2 J5
-Makespan: 57
