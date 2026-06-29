@@ -1,136 +1,215 @@
-# Proyecto ADA - PFSP con Artificial Bee Colony (ABC) - G6
+# Proyecto ADA – PFSP con Artificial Bee Colony (ABC) · Grupo 6
+
 ---
+
 ## Descripción del proyecto
 
-Este repositorio contiene la implementación del proyecto de Análisis y Diseño de Algoritmos para resolver el Permutation Flow Shop Scheduling Problem (PFSP) mediante el algoritmo metaheurístico Artificial Bee Colony (ABC).
+Este repositorio contiene la implementación del algoritmo metaheurístico **Artificial Bee Colony (ABC)** para resolver el **Permutation Flow Shop Scheduling Problem (PFSP)**, desarrollado para el curso de Análisis y Diseño de Algoritmos de la Universidad de Lima (Evaluación 3 – G6).
 
-El programa integra la lectura de instancias, cálculo del makespan, generación de soluciones mediante permutaciones de trabajos y la búsqueda de mejores soluciones utilizando las fases de abejas empleadas, observadoras y exploradoras.
+El PFSP consiste en determinar el orden de procesamiento de un conjunto de **n trabajos** que pasan secuencialmente por **m máquinas**, de forma que se minimice el **makespan** (tiempo total de finalización). Una solución se representa como una permutación de trabajos, por ejemplo `[J3, J1, J4, J2, J5]`, que se aplica de forma idéntica en todas las máquinas.
+
 ---
-## Archivos principales
 
-- `abc_pfsp.cpp`: implementación principal del algoritmo ABC.
-- `instancia1_bas1.txt`: instancia pequeña.
-- `instancia2_car5.txt`: instancia mediana.
-- `instancia3_reC01.txt`: instancia grande.
-- `readme_instancias.txt`: descripción del formato de entrada.
-Nota: Las instancias utilizadas corresponden a problemas PFSP en formato Taillard y contienen diferentes tamaños para evaluar el comportamiento del algoritmo.
+## Archivos del proyecto
+
+| Archivo | Descripción |
+|---------|-------------|
+| `abc_pfsp.cpp` | Implementación completa del algoritmo ABC adaptado al PFSP en C++17. |
+| `instancia1_bas1.txt` | Instancia pequeña: 5 trabajos × 4 máquinas. |
+| `instancia2_car5.txt` | Instancia mediana: 10 trabajos × 6 máquinas. |
+| `instancia3_reC01.txt` | Instancia grande: 20 trabajos × 5 máquinas. |
+| `README.md` | Este archivo. |
+
+---
+
 ## Compilación
-
-Compilar el programa con:
 
 ```bash
 g++ -O2 -std=c++17 -o abc_pfsp abc_pfsp.cpp
 ```
 
+Requiere un compilador compatible con C++17 (GCC 7+, Clang 5+).
+
 ---
 
-## Ejecución
+## Modos de ejecución
 
-
-Ejecutar utilizando una instancia:
+### Ejecución estándar (una corrida)
 
 ```bash
+./abc_pfsp <archivo_instancia.txt> [numAbejas] [limite] [maxIteraciones] [semilla]
+```
+
+**Ejemplos:**
+
+```bash
+# Con parámetros por defecto (numAbejas=20, limite=30, maxIteraciones=200, semilla=aleatoria)
 ./abc_pfsp instancia1_bas1.txt
-```
 
-O indicando explícitamente los parámetros:
-
-```bash
-./abc_pfsp instancia1_bas1.txt 20 30 200 42
-```
-
-### Parámetros del algoritmo
-
-| Parámetro      | Valor de ejemplo | Descripción                                                            |
-| -------------- | ---------------- | ---------------------------------------------------------------------- |
-| numAbejas      | 20               | Cantidad de soluciones manejadas simultáneamente por el algoritmo      |
-| limite         | 30               | Número máximo de intentos sin mejora antes de reinicializar una fuente |
-| maxIteraciones | 200              | Número total de iteraciones del algoritmo                              |
-| semilla        | 42               | Semilla utilizada para el generador aleatorio                          |
-
-### Ejecución de las instancias evaluadas
-
-```bash
+# Con parámetros explícitos y semilla fija (reproducible)
 ./abc_pfsp instancia1_bas1.txt 20 30 200 42
 ./abc_pfsp instancia2_car5.txt 20 30 200 42
 ./abc_pfsp instancia3_reC01.txt 20 30 200 42
 ```
+
+### Modo experimento (10 ejecuciones automáticas con tabla de estadísticas)
+
+Realiza 10 corridas con semillas predefinidas y genera automáticamente la tabla resumen requerida por la rúbrica (mejor makespan, peor makespan, promedio, desviación estándar, tiempo promedio, mejor secuencia), la comparación contra la heurística base NEH, y todos los archivos de salida de la mejor corrida.
+
+```bash
+./abc_pfsp --experimento <archivo_instancia.txt> [numAbejas] [limite] [maxIteraciones]
+```
+
+**Ejemplos (recomendados para reproducir los resultados del informe):**
+
+```bash
+./abc_pfsp --experimento instancia1_bas1.txt 20 30 200
+./abc_pfsp --experimento instancia2_car5.txt 20 30 200
+./abc_pfsp --experimento instancia3_reC01.txt 20 30 200
+```
+
 ---
 
-## Carga del archivo de entrada
+## Parámetros del algoritmo
 
-La función `leerInstancia()` abre el archivo .txt especificado por línea de comandos y lee su contenido siguiendo el formato de las instancias de Taillard. La primera línea del archivo contiene la cantidad de trabajos y máquinas. Las líneas siguientes describen los tiempos de procesamiento de cada trabajo en cada máquina mediante pares (índice_máquina, tiempo). Estos datos se almacenan en una estructura Instancia que contiene el número de trabajos, el número de máquinas y la matriz de tiempos de procesamiento.
-La función valida que el archivo exista, que los datos estén completos y que los índices de máquina sean coherentes. En caso de error, el programa termina con un mensaje descriptivo. La matriz de tiempos queda indexada como `tiempos[trabajo][maquina]`, donde las filas representan trabajos y las columnas representan máquinas.
-
+| Parámetro | Valor por defecto | Descripción |
+|-----------|-------------------|-------------|
+| `numAbejas` | 20 | Número de fuentes de alimento (= abejas empleadas). También determina las abejas observadoras. |
+| `limite` | 30 | Máximo de intentos sin mejora que tolera una fuente antes de ser abandonada por una exploradora. |
+| `maxIteraciones` | 200 | Número total de ciclos del algoritmo (criterio de parada). |
+| `semilla` | aleatoria | Semilla para el generador `mt19937`. Fijarla garantiza reproducibilidad exacta. |
 
 ---
 
-## Cálculo del makespan
+## Descripción del algoritmo ABC adaptado al PFSP
 
-El makespan se calcula mediante la función `calcularMakespanRapido()`, que implementa la fórmula recurrente del PFSP:
+### Representación de soluciones
 
-```text
+Cada **fuente de alimento** es una permutación de trabajos (índices 0 a n-1). El fitness se mide con el makespan: a menor makespan, mejor fuente.
+
+### Fases del ciclo ABC
+
+| Fase | Función en el código | Descripción |
+|------|----------------------|-------------|
+| Inicialización | `inicializarFuentes()` | Genera `numAbejas` permutaciones aleatorias usando `mt19937` con la semilla indicada. |
+| Abejas empleadas | `faseEmpleadas()` | Cada abeja genera un vecino de su fuente mediante **swap** o **inserción** al azar. Aplica selección voraz: acepta el vecino solo si mejora el makespan. |
+| Abejas observadoras | `faseObservadoras()` | Selecciona fuentes por **ruleta proporcional al fitness** (`1/(1+makespan)`). Las fuentes con menor makespan atraen más observadoras. Aplica la misma búsqueda local voraz. |
+| Abejas exploradoras | `faseExploradoras()` | Si una fuente supera el `limite` de intentos consecutivos sin mejora, se reemplaza por una permutación completamente nueva al azar. |
+| Actualización global | Ciclo principal en `ejecutarABC()` | Al final de cada iteración se actualiza la mejor solución global sin sobreescribirla si empeora. |
+
+### Operadores de vecindad
+
+- **Swap:** intercambia dos posiciones seleccionadas al azar.
+- **Inserción:** extrae un trabajo de una posición y lo inserta en otra posición distinta.
+
+### Cálculo del makespan
+
+Se utiliza la recurrencia del PFSP:
+
+```
 C[i][j] = max(C[i-1][j], C[i][j-1]) + p[i][j]
 ```
 
-Esta función es la pieza central del algoritmo ABC, ya que se invoca en cada evaluación de vecino durante las fases de abejas empleadas y observadoras. Para reducir el consumo de memoria, la implementación no construye la matriz completa de tiempos de finalización sino que mantiene únicamente dos vectores de tamaño m (la fila anterior y la fila actual). Esto reduce el uso de memoria de O(n × m) a O(m), lo cual resulta especialmente importante cuando el algoritmo evalúa decenas de miles de soluciones por ejecución.
-La función `generarTablaFinalizacion()` sí construye la matriz completa, pero únicamente se llama una vez al final de la ejecución para procesar la mejor solución encontrada y generar los datos de salida para el diagrama de Gantt.
+La función `calcularMakespanRapido()` mantiene solo dos vectores de tamaño m (fila anterior y fila actual), reduciendo la memoria de O(n×m) a O(m). Esta versión optimizada se usa en cada evaluación durante las fases del algoritmo.
 
+La función `generarTablaFinalizacion()` construye la matriz completa, pero solo se llama una vez al final para generar los datos de salida (Gantt y tabla de finalización).
 
----
+### Detección automática de formato de instancia
 
-## Implementación del algoritmo ABC
+La función `leerInstancia()` detecta automáticamente si el archivo usa:
 
-Cada solución candidata se representa mediante una estructura FuenteAlimento, que contiene: la permutación de trabajos (orden), el makespan correspondiente y un contador de intentos sin mejora. La función ejecutarABC() orquesta el ciclo completo del algoritmo, cuyas fases se describen de la siguiente manera.
-### Inicialización
-La función inicializarFuentes() genera numAbejas permutaciones aleatorias de trabajos usando el motor de números pseudoaleatorios mt19937 de la biblioteca estándar de C++. Este generador se inicializa con la semilla indicada por parámetro, lo que garantiza la reproducibilidad de los resultados. A cada fuente se le calcula su makespan desde el inicio para que el algoritmo pueda comparar soluciones de inmediato.
-### Fase de abejas empleadas
-La función faseEmpleadas() itera sobre cada fuente de alimento y genera un vecino aplicando al azar uno de dos operadores de permutación. El operador de intercambio (swap) selecciona dos posiciones al azar y las intercambia. El operador de inserción extrae un trabajo de una posición al azar y lo inserta en otra posición distinta también al azar. Ambos operadores garantizan que el resultado siga siendo una permutación válida de todos los trabajos.
-Tras calcular el makespan del vecino generado, se aplica la selección voraz: si el vecino mejora el makespan actual, reemplaza a la fuente y se reinicia su contador de intentos; de lo contrario, la fuente original se conserva y se incrementa el contador.
-### Fase de abejas observadoras
-La función faseObservadoras() implementa la selección por ruleta proporcional al fitness. El fitness de cada fuente se calcula como 1 / (1 + makespan), de modo que las fuentes con menor makespan reciben mayor probabilidad de ser seleccionadas. Las observadoras se asignan hasta completar un total de numAbejas asignaciones, concentrando la búsqueda en las regiones más prometedoras del espacio de soluciones. Sobre cada fuente seleccionada se aplica la misma lógica de generación de vecino y selección voraz que en la fase de empleadas.
-### Fase de abejas exploradoras
-La función faseExploradoras() recorre todas las fuentes y verifica si alguna ha superado el parámetro límite de intentos consecutivos sin mejora. En ese caso, la fuente se considera agotada y se reemplaza por una nueva permutación generada completamente al azar, simulando el comportamiento de una abeja exploradora que abandona una zona improductiva y explora una nueva región del espacio de búsqueda. Se mantiene un contador de reinicios para reportar esta información al finalizar la ejecución.
-### Actualización de la mejor solución global
-Al final de cada iteración, el ciclo revisa todas las fuentes y actualiza la mejor solución global si alguna ha obtenido un makespan menor al registrado. El mejor orden y el mejor makespan global nunca se sobreescriben por soluciones peores, garantizando que el resultado final corresponda a la mejor solución encontrada durante la ejecución.
+- **Formato A (matriz simple):** exactamente `n × m` números, una fila por trabajo con sus tiempos en orden M1..Mm.
+- **Formato B (pares máquina-tiempo):** exactamente `2 × n × m` números, pares `(índice_máquina, tiempo)` por trabajo. También detecta si la numeración de máquinas es base 0 (0..m-1) o base 1 (1..m) y ajusta automáticamente.
 
+Si el archivo no coincide con ninguno de los dos formatos, el programa informa el error con el detalle exacto del número de valores esperados vs. encontrados.
+
+### Heurística base de comparación (NEH)
+
+El programa incluye la heurística **NEH** (Nawaz, Enscore y Ham, 1983), que es el método constructivo de referencia para el PFSP. Se calcula automáticamente antes de correr ABC y se reporta junto con el makespan ABC para cuantificar la mejora. NEH fue elegido como baseline porque produce resultados de buena calidad con costo computacional mínimo, lo que hace la comparación más exigente y creíble que una secuencia aleatoria.
 
 ---
 
-## Funciones principales
-La tabla siguiente resume las funciones más relevantes del programa, con su propósito y la fase del algoritmo a la que pertenecen.
+## Archivos de salida generados
 
-| Función | Descripción | Fase ABC |
-|----------|------------|----------|
-| `inicializarFuentes()` | Genera la población inicial de soluciones aleatorias. Cada fuente de alimento es una permutación de trabajos con su makespan ya calculado. | Inicialización |
-| `faseEmpleadas()` | Cada abeja empleada genera un vecino de su fuente usando swap o inserción y aplica selección voraz. | Empleadas |
-| `faseObservadoras()` | Selecciona fuentes por ruleta proporcional al fitness. Las mejores fuentes reciben más atención de búsqueda. | Observadoras |
-| `faseExploradoras()` | Abandona las fuentes agotadas (que superaron el límite de intentos) y las reemplaza con soluciones aleatorias nuevas. | Exploradoras |
-| `generarVecino()` | Aplica al azar un operador de vecindad: intercambio de dos posiciones (swap) o extracción e inserción de un trabajo. | Empleadas / Observadoras |
-| `calcularMakespanRapido()` | Versión optimizada del cálculo de makespan que usa solo dos filas en lugar de la matriz completa para reducir el uso de memoria. | Evaluación |
-| `ejecutarABC()` | Orquesta el ciclo completo del algoritmo: inicialización, iteraciones, actualización de la mejor solución y registro del historial. | Ciclo principal |
-| `exportarConvergenciaCSV()` | Guarda el historial del mejor makespan por iteración en un archivo CSV para construir la curva de convergencia. | Salida |
-| `exportarDatosGanttCSV()` | Exporta los tiempos de inicio, fin y duración de cada operación de la mejor solución, listos para el diagrama de Gantt. | Salida |
-
----
-
-## Resultados generados
-Al finalizar su ejecución, el programa muestra:
-
-- Mejor secuencia encontrada.
-- Mejor makespan obtenido.
-- Iteraciones ejecutadas.
-- Reinicios realizados.
-- Tiempo de ejecución.
-- Parámetros utilizados.
-
-Además, genera cuatro archivos de salida cuyo nombre incorpora el nombre de la instancia procesada:
-
+### Modo estándar (una corrida)
 
 | Archivo | Descripción |
-|----------|------------|
-| `salida_abc_<instancia>_resumen.txt` | Resumen completo de la ejecución con parámetros y resultados. |
-| `salida_abc_<instancia>_tabla_finalizacion.csv` | Tabla de tiempos de finalización de la mejor solución encontrada. |
-| `salida_abc_<instancia>_datos_gantt.csv` | Datos necesarios para construir el diagrama de Gantt. |
-| `salida_abc_<instancia>_convergencia.csv` | Historial del mejor makespan por iteración para la curva de convergencia. |
+|---------|-------------|
+| `salida_abc_<instancia>_resumen.txt` | Parámetros, mejor secuencia, makespan, iteraciones, reinicios, tiempo de ejecución y comparación con NEH. |
+| `salida_abc_<instancia>_tabla_finalizacion.csv` | Tabla C[i][j] de tiempos de finalización de la mejor solución. |
+| `salida_abc_<instancia>_datos_gantt.csv` | Inicio, fin y duración de cada operación (trabajo × máquina). |
+| `salida_abc_<instancia>_convergencia.csv` | Mejor makespan por iteración (para graficar la curva de convergencia). |
+| `grafica_convergencia_<instancia>.svg` | Curva de convergencia generada automáticamente (eje X: iteraciones, eje Y: mejor makespan). |
+| `grafica_gantt_<instancia>.svg` | Diagrama de Gantt de la mejor solución con colores por trabajo, tiempos de inicio/fin y makespan final. |
+
+### Modo experimento (10 corridas)
+
+Todos los archivos anteriores (prefijo `salida_experimento_` y `grafica_*_experimento_`) referidos a la **mejor corrida** del experimento, más:
+
+| Archivo | Descripción |
+|---------|-------------|
+| `salida_experimento_<instancia>_ejecuciones.csv` | Detalle fila a fila de las 10 ejecuciones (semilla, makespan, tiempo, iteraciones, secuencia). |
+| `salida_experimento_<instancia>_resumen.txt` | Tabla resumen estadística + comparación con NEH, lista para copiar al informe. |
+
 ---
+
+## Estructura del código fuente
+
+```
+abc_pfsp.cpp
+├── Estructuras de datos
+│   ├── Instancia           — trabajos, maquinas, tiempos, formatoDetectado
+│   ├── FuenteAlimento      — orden (permutación), makespan, intentos
+│   ├── ParametrosABC       — numAbejas, limite, maxIteraciones, semilla
+│   ├── ResultadoABC        — mejorOrden, mejorMakespan, historial, tiempos...
+│   └── EjecucionExperimento — datos de una corrida dentro del modo experimento
+│
+├── Lectura y validación
+│   ├── leerInstancia()     — parsea el archivo con detección automática de formato
+│   └── validarOrden()      — verifica que la permutación sea válida
+│
+├── Cálculo del makespan
+│   ├── calcularMakespanRapido()    — versión O(m) usada en evaluaciones internas
+│   └── generarTablaFinalizacion()  — versión completa O(n×m) para exportar
+│
+├── Heurística base
+│   └── heuristicaNEH()     — NEH clásico: suma de tiempos + inserción voraz
+│
+├── Operadores de vecindad
+│   ├── operadorSwap()       — intercambia dos posiciones
+│   ├── operadorInsercion()  — extrae e inserta un trabajo
+│   └── generarVecino()      — elige al azar entre swap e inserción
+│
+├── Fases del algoritmo ABC
+│   ├── inicializarFuentes()
+│   ├── faseEmpleadas()
+│   ├── faseObservadoras()
+│   ├── faseExploradoras()
+│   └── ejecutarABC()        — ciclo principal, retorna ResultadoABC
+│
+├── Salida en consola
+│   ├── mostrarOrden()
+│   ├── mostrarMatriz()
+│   └── mostrarTablaFinalizacion()  — muestra C[i][j] directamente en terminal
+│
+├── Exportación a archivo
+│   ├── exportarTablaFinalizacionCSV()
+│   ├── exportarDatosGanttCSV()
+│   ├── exportarConvergenciaCSV()
+│   ├── exportarResumenABC_TXT()         — incluye comparación con NEH
+│   ├── exportarExperimentoCSV()         — detalle de las 10 corridas
+│   └── exportarResumenExperimentoTXT()  — tabla estadística del experimento
+│
+└── Visualizaciones SVG (generadas automáticamente)
+    ├── generarGraficaConvergenciaSVG()  — curva de convergencia
+    └── generarGraficaGanttSVG()         — diagrama de Gantt con colores
+```
+
+---
+
+## Notas de reproducibilidad
+
+- Fijar la misma `semilla` garantiza resultados idénticos en cualquier plataforma con C++17.
+- El modo `--experimento` usa las semillas fijas `{42, 123, 456, 789, 1001, 2024, 3141, 9999, 11, 777}`.
+- Los archivos SVG son compatibles con cualquier navegador moderno.
+- El formato de instancia se detecta automáticamente, por lo que no es necesario modificar el código para cambiar entre los archivos de ejemplo.
