@@ -3,3 +3,4 @@ pfsp
 *.exe
 salida_*
 grafica_*
+outputs/
