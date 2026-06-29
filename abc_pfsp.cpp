@@ -9,6 +9,7 @@
 #include <random>
 #include <chrono>
 #include <climits>
+#include <cmath>
 
 using namespace std;
 using namespace std::chrono;
@@ -617,11 +618,98 @@ void exportarResumenABC_TXT(
 // ----------------------------------------------------------------------
 
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
+if (argc < 2) {
         cout << "Uso:" << endl;
         cout << "  " << argv[0] << " archivo_instancia.txt [numAbejas] [limite] [maxIteraciones] [semilla]" << endl;
+        cout << "  " << argv[0] << " --experimento archivo_instancia.txt" << endl;
         cout << "\nValores por defecto: numAbejas=20 limite=30 maxIteraciones=200 semilla=aleatoria" << endl;
         return 1;
+    }
+
+    // ── Modo experimento: 10 ejecuciones con estadísticas ──────────────────
+    if (string(argv[1]) == "--experimento" && argc >= 3) {
+        string archivoInst = argv[2];
+        Instancia instancia = leerInstancia(archivoInst);
+
+        int numAbejas      = (argc > 3) ? atoi(argv[3]) : 20;
+        int limite         = (argc > 4) ? atoi(argv[4]) : 30;
+        int maxIteraciones = (argc > 5) ? atoi(argv[5]) : 200;
+
+        vector<unsigned int> semillas = {42, 123, 456, 789, 1001, 2024, 3141, 9999, 11, 777};
+
+        cout << "\n========================================" << endl;
+        cout << "EXPERIMENTO: " << archivoInst << endl;
+        cout << "Trabajos: " << instancia.trabajos
+             << " | Maquinas: " << instancia.maquinas << endl;
+        cout << "Parametros: abejas=" << numAbejas
+             << " limite=" << limite
+             << " iteraciones=" << maxIteraciones << endl;
+        cout << "========================================\n" << endl;
+
+        vector<long long> makespans;
+        vector<double>    tiempos;
+        long long mejorGlobal  = LLONG_MAX;
+        long long peorGlobal   = 0;
+        vector<int> mejorSecuencia;
+
+        cout << left
+             << setw(10) << "Ejecucion"
+             << setw(10) << "Semilla"
+             << setw(12) << "Makespan"
+             << setw(14) << "Tiempo (s)" << endl;
+        cout << string(46, '-') << endl;
+
+        for (int i = 0; i < (int)semillas.size(); i++) {
+            ParametrosABC params;
+            params.numAbejas      = numAbejas;
+            params.limite         = limite;
+            params.maxIteraciones = maxIteraciones;
+            params.semilla        = semillas[i];
+
+            ResultadoABC res = ejecutarABC(instancia, params);
+
+            makespans.push_back(res.mejorMakespan);
+            tiempos.push_back(res.tiempoEjecucionSegundos);
+
+            if (res.mejorMakespan < mejorGlobal) {
+                mejorGlobal    = res.mejorMakespan;
+                mejorSecuencia = res.mejorOrden;
+            }
+            if (res.mejorMakespan > peorGlobal)
+                peorGlobal = res.mejorMakespan;
+
+            cout << left
+                 << setw(10) << (i + 1)
+                 << setw(10) << semillas[i]
+                 << setw(12) << res.mejorMakespan
+                 << setw(14) << fixed << setprecision(6) << res.tiempoEjecucionSegundos
+                 << endl;
+        }
+
+        double suma = 0;
+        for (long long m : makespans) suma += m;
+        double promedio = suma / makespans.size();
+
+        double varianza = 0;
+        for (long long m : makespans) varianza += (m - promedio) * (m - promedio);
+        double desviacion = sqrt(varianza / makespans.size());
+
+        double sumaTiempo = 0;
+        for (double t : tiempos) sumaTiempo += t;
+        double tiempoProm = sumaTiempo / tiempos.size();
+
+        cout << string(46, '-') << endl;
+        cout << "\n--- TABLA RESUMEN ---" << endl;
+        cout << "Mejor makespan:      " << mejorGlobal   << endl;
+        cout << "Peor makespan:       " << peorGlobal    << endl;
+        cout << "Promedio:            " << fixed << setprecision(2) << promedio   << endl;
+        cout << "Desviacion estandar: " << fixed << setprecision(2) << desviacion << endl;
+        cout << "Tiempo promedio:     " << fixed << setprecision(6) << tiempoProm << " s" << endl;
+        cout << "Mejor secuencia:     ";
+        mostrarOrden(mejorSecuencia);
+        cout << "\n" << endl;
+
+        return 0;
     }
 
     string nombreArchivo = argv[1];
